@@ -8,6 +8,7 @@ class Node(object):
         self.scope= set()
         self.update_links()
         self.value=0
+        self.derivative = 0
 
     def update_links(self):
         for child in self.children:
@@ -23,6 +24,10 @@ class Node(object):
 
     def eval(self):
         pass
+
+    def pass_gradient(self):
+        pass
+
 
 class SumNode(Node):
     def __init__(self, id, children=[],weights=[],parents=[]):
@@ -44,13 +49,24 @@ class SumNode(Node):
         # Todo:  MPE Inference (MPE assignment)
 
     def eval(self, X, Q, mpe=None):  #  X = {x1:0, x2:0 , x3:1}
-        s = 0.0
         weights = self.weights/np.sum(self.weights)
+
         if mpe == None:
-            for child, weight in zip(self.children, weights):
-                s += weight *child.eval(X,Q)
+            s= np.dot(weights, [child.eval(X,Q) for child in self.children])
         self.value = s
         return self.value
+
+    # def get_child_gradient(self):
+    #     weights = self.weights/np.sum(self.weights)
+    #     self.weights = weights + weights * self.derivate
+    #     for child, w in self.children, self.weights:
+    #         child.derivative = w
+
+    def pass_gradient(self):
+        for child in self.children:
+            child.derivative = child.derivative + self.derivative * \
+                    np.prod([sib.value for sib in self.children if sib != child])
+            print(child.derivative)
 
 class ProdNode(Node):
     def __init__(self, id, children=[],parents=[]):
@@ -77,6 +93,10 @@ class ProdNode(Node):
         self.value = p
         return self.value
 
+    def pass_gradient(self):
+        for child in self.children:
+            child.derivative = child.derivative + self.derivative * \
+                    np.prod([sib.value for sib in self.children if sib != child])
 
 class LeafNode(Node):
     def __init__(self, id, variable,weights=[], parents=[]):
@@ -98,6 +118,7 @@ class LeafNode(Node):
         self.scope = {variable.id}
         self.parents = parents
         self.value= 0
+        self.derivate = 0
 
     def eval(self, X, Q):
         '''
@@ -121,6 +142,12 @@ class LeafNode(Node):
             # print(' X self.value',self.value)
 
         return self.value
+
+    def get_gradient(self):
+        return
+    def pass_gradient(self):
+        weights = self.weights/np.sum(self.weights)
+        self.weights = weights + weights * self.derivate
 
 
 class Variables():
@@ -171,3 +198,7 @@ if __name__ == '__main__':
 
 
 
+s0.derivative = 1
+s0.pass_gradient()
+for s in s0.children:
+    print(s.derivative)
