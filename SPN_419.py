@@ -49,8 +49,8 @@ class SPN():
 s=SPN()
 s.train()
 
-X=np.array([[0,0],     #P(x0=T, x1 = F )
-            [0,1],
+X=np.array([[0,0],     #(x0=F, x1 = F )
+            [0,1],     #(x0=F, x1 = T )
             [1,0],
             [1,1]])
 
