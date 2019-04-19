@@ -48,21 +48,21 @@ class SPN():
 # 实现了简单的inference 过程
 s=SPN()
 s.train()
+           # x0 x1
+X=np.array([[0, 0],     #(x0=F, x1 = F )
+            [0, 1],     #(x0=F, x1 = T )
+            [1, 0],      #( x0 = T, x1= F
+            [1, 1]])
 
-X=np.array([[0,0],     #(x0=F, x1 = F )
-            [0,1],     #(x0=F, x1 = T )
-            [1,0],
-            [1,1]])
 
+print(s.inference(X,[1,1]))  # [1,1] means P(x0, x1) 考虑x0, x1
 
-print(s.inference(X,[1,1]))  # [1,1] means P(x0, x1)
+print(s.inference(X,[1,0]))  # [1,0] means P(x0) 不考虑x1
 
-print(s.inference(X,[1,0]))  # [1,0] means P(x0)
-
-print(s.inference(X,[0,1]))  # [0,1] means P(x1)
+print(s.inference(X,[0,1]))  # [0,1] means P(x1) 不考虑x0
 
 # P(x1| x0 )
-print(s.inference(X,[0,1],[1,0]))
+print(s.inference(X,[0,1],[1,0]))    # Q= 只考虑x1,  evidence 只考虑x0
 
 # P(x0| x1 )
-print(s.inference(X,[1,0],[0,1]))
+print(s.inference(X,[1,0],[0,1]))   # Q 只考虑x0, evidence只考虑x1
