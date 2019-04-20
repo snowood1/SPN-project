@@ -86,6 +86,7 @@ class SPN:
     def __init__(self, root, rvs):
         self.root = root
         self.rvs = rvs
+        self.init_scope(root)
 
     def init_scope(self, root):
         if type(root) is not RVNode:
