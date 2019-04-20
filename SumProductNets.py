@@ -13,13 +13,8 @@ class SumNode:
         self.scope = set()
         self.value = None
 
-    def update_links(self):
-        for child in self.children:
-            self.scope = self.scope.union(child.scope)
-            if self not in child.parents:
-                child.add_parent(self)
-
     def eval(self):
+        # return single value or a numpy array of values
         self.value = self.w @ [i.eval() for i in self.ch]
         return self.value
 
@@ -32,6 +27,7 @@ class ProductNode:
         self.value = None
 
     def eval(self):
+        # return single value or a numpy array of values
         self.value = 1
         for i in self.ch:
             self.value *= i.eval()
@@ -51,64 +47,64 @@ class RVNode(SumNode):
         self.rv = rv
 
         ch = list()
-        for x in rv.domain:
+        for _ in rv.domain:
             ch.append(LeafNode())
 
         SumNode.__init__(self, ch, w)
 
+        self.scope = {rv}
+
 
 class RV:
-    def __init__(self, domain=(0,1)):
+    id_counter = itertools.count()
+
+    def __init__(self, domain, name=None):
         self.domain = domain
         self.value = None
         self.instance = list()
+        if name is None:
+            self.name = 'RV#' + next(self.id_counter)
+        else:
+            self.name = name
+
+    def __str__(self):
+        return self.name
 
     def set_value(self, value):
         self.value = value
         for i in self.instance:
             for j, d in zip(i.ch, self.domain):
+                if value is None:
+                    # when the value of rv is unknown, set all leaf node to one
+                    j.value = 1
+                else:
+                    # when the value of rv is known, set the right leaf node to one, others to zero
+                    j.value = np.where(value == d, 1, 0)
 
 
+class SPN:
+    def __init__(self, root, rvs):
+        self.root = root
+        self.rvs = rvs
 
-if __name__ == '__main__':
+    def init_scope(self, root):
+        if type(root) is not RVNode:
+            return root.scope
+        else:
+            scope = set()
+            for i in root.ch:
+                scope |= self.init_scope(i)
+            root.scope = scope
+            return scope
 
-    variables_name = ['x1','x2']
+    def prod(self, obs_rvs, data):
+        remaining_rvs = set(self.rvs)
 
-    Var=[]
-    for k in range(2):
-        Var.append(Variables(k))
+        for i, rv in enumerate(obs_rvs):
+            rv.set_value(data[i, :])
+            remaining_rvs -= rv
 
+        for rv in remaining_rvs:
+            rv.set_value(None)
 
-    s1 = LeafNode('s1',Var[0],weights=[2,8])
-    s2 = LeafNode('s2',Var[0] ,weights=[1,9])
-    s3 = LeafNode('s3',Var[1],weights=[4,6])
-
-    p1 = ProdNode('p1 = s1+s3', [s1, s3])
-    p2 = ProdNode('p2 = s2+s3', [s2, s3])
-
-    s0 = SumNode('root', [p1,p2],[0.3,0.7])
-
-
-    # 实现了简单的inference 过程
-
-    X=np.array([[0,0],     #P(x0=T, x1 = F )
-                [0,1],
-                [1,0],
-                [1,1]])    #P(x0=F, x1 = T )
-
-    print(s0.eval(X,[1,1]))  # [1,1] means P(x0, x1)
-
-    print(s0.eval(X,[1,0]))  # [1,0] means P(x0) P(x0=1), P(x0=0)
-
-    print(s0.eval(X,[0,1]))  # [0,1] means P(x1), P(x1=0) P(x1=1)
-
-    # Queries 过程
-    # P(x1| x0 ) = P(x0,x1)/P(x0)
-    print(s0.eval(X,[1,1])/s0.eval(X,[1,0]))
-
-
-
-s0.derivative = 1
-s0.pass_gradient()
-for s in s0.children:
-    print(s.derivative)
+        return self.root.eval()
