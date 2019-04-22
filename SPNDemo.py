@@ -30,3 +30,6 @@ print(S.prod([rv1, rv2], data))
 
 # compute the marginal or rv1 (sum out rv2)
 print(S.prod([rv1], data[[0], :]))
+
+# alternative to data matrix, value can be directly assign to random variables
+print(S.prod([rv1, rv2], [0, 1]))

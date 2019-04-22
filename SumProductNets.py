@@ -105,7 +105,7 @@ class SPN:
         remaining_rvs = set(self.rvs)
 
         for i, rv in enumerate(obs_rvs):
-            rv.set_value(data[i, :])
+            rv.set_value(data[i])
             remaining_rvs -= {rv}
 
         for rv in remaining_rvs:
