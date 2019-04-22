@@ -198,7 +198,7 @@ if __name__ == '__main__':
 
 
 
-s0.derivative = 1
-s0.pass_gradient()
-for s in s0.children:
-    print(s.derivative)
+# s0.derivative = 1
+# s0.pass_gradient()
+# for s in s0.children:
+#     print(s.derivative)
