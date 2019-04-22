@@ -70,20 +70,24 @@ X=np.array([[0,0],     #P(x0=0, x1 = 0 )
             [1,0],     #P(x0=1, x1 = 0 )
             [1,1]])    #P(x0=1, x1 = 1 )
 
-
+print('\nP(x0,x1):')
 print(s.inference(X,[1,1]))  # [1,1] means P(x0, x1) 意思是考虑x0,x1,联合概率
 
-
+print('\nP(x0):')
 print(s.inference(X,[1,0]))  # [1,0] means P(x0) 意思是考虑x0, 不考虑 x1, marginal prob
 
+print('\nP(x1):')
 print(s.inference(X,[0,1]))  # [0,1] means P(x1) 意思是考虑x1, 不考虑 x0, marginal prob
 
 # P(x1| x0 )  第一个[0,1]表示查询P(x1), 第二个[1,0] 表示条件是P(x0)
+print('\nP(x1| x0 ):')
 print(s.inference(X,[0,1],[1,0]))
 
 # P(x0| x1 )  第一个[1,0] 表示查询P(x0), 第二个[0,1] 表示条件是P(x1)
+print('\nP(x0|x1):')
 print(s.inference(X,[1,0],[0,1]))
 
 # 现在我们看一下gradient decent的结果， 做gradient必须先inference了之后才能做gradient
+print('\nP(x0,x1) gradient decent:')
 s.inference(X,[1,1])
 s.gradient_descent()
