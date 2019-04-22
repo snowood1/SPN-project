@@ -35,11 +35,12 @@ class ProductNode:
 
 
 class LeafNode:
-    def __init__(self):
-        self.value = None
+    def __init__(self, rv, domain_idx):
+        self.rv = rv
+        self.domain_idx = domain_idx
 
     def eval(self):
-        return self.value
+        return self.rv.leaf_node_value[self.domain_idx]
 
 
 class RVNode(SumNode):
@@ -47,8 +48,8 @@ class RVNode(SumNode):
         self.rv = rv
 
         ch = list()
-        for _ in rv.domain:
-            ch.append(LeafNode())
+        for idx in range(len(rv.domain)):
+            ch.append(LeafNode(rv, idx))
 
         SumNode.__init__(self, ch, w)
 
@@ -61,7 +62,7 @@ class RV:
     def __init__(self, domain, name=None):
         self.domain = domain
         self.value = None
-        self.instance = list()
+        self.leaf_node_value = None
         if name is None:
             self.name = 'RV#' + next(self.id_counter)
         else:
@@ -72,14 +73,16 @@ class RV:
 
     def set_value(self, value):
         self.value = value
-        for i in self.instance:
-            for j, d in zip(i.ch, self.domain):
-                if value is None:
-                    # when the value of rv is unknown, set all leaf node to one
-                    j.value = 1
-                else:
-                    # when the value of rv is known, set the right leaf node to one, others to zero
-                    j.value = np.where(value == d, 1, 0)
+        self.leaf_node_value = list()
+        for d in self.domain:
+            if value is None:
+                # when the value of rv is unknown, set all leaf node to one
+                leaf_value = 1
+            else:
+                # when the value of rv is known, set the right leaf node to one, others to zero
+                leaf_value = np.where(value == d, 1, 0)
+
+            self.leaf_node_value.append(leaf_value)
 
 
 class SPN:
@@ -103,7 +106,7 @@ class SPN:
 
         for i, rv in enumerate(obs_rvs):
             rv.set_value(data[i, :])
-            remaining_rvs -= rv
+            remaining_rvs -= {rv}
 
         for rv in remaining_rvs:
             rv.set_value(None)
