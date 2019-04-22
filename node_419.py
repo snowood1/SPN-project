@@ -46,7 +46,7 @@ class SumNode(Node):
         self.weights.append(weight)
 
         #     for child
-        # Todo:  MPE Inference (MPE assignment)
+        # Todo:  MPE Inference (MPE assignment)  MPE 没有写，只有sum 模式
 
     def eval(self, X, Q, mpe=None):  #  X = {x1:0, x2:0 , x3:1}
         weights = self.weights/np.sum(self.weights)
@@ -56,17 +56,11 @@ class SumNode(Node):
         self.value = s
         return self.value
 
-    # def get_child_gradient(self):
-    #     weights = self.weights/np.sum(self.weights)
-    #     self.weights = weights + weights * self.derivate
-    #     for child, w in self.children, self.weights:
-    #         child.derivative = w
-
-    def pass_gradient(self):
-        for child in self.children:
-            child.derivative = child.derivative + self.derivative * \
-                    np.prod([sib.value for sib in self.children if sib != child])
-            print(child.derivative)
+    def pass_gradient(self):    # sum node 对child  pass gradient
+        weights = self.weights/np.sum(self.weights)
+        self.weights = weights + weights * self.derivate
+        for child, w in self.children, self.weights:
+            child.derivative = w
 
 class ProdNode(Node):
     def __init__(self, id, children=[],parents=[]):
@@ -93,7 +87,7 @@ class ProdNode(Node):
         self.value = p
         return self.value
 
-    def pass_gradient(self):
+    def pass_gradient(self):    
         for child in self.children:
             child.derivative = child.derivative + self.derivative * \
                     np.prod([sib.value for sib in self.children if sib != child])
@@ -180,7 +174,7 @@ if __name__ == '__main__':
 
 
     # 实现了简单的inference 过程
-
+  
     X=np.array([[0,0],     #P(x0=T, x1 = F )
                 [0,1],
                 [1,0],
@@ -198,7 +192,7 @@ if __name__ == '__main__':
 
 
 
-s0.derivative = 1
-s0.pass_gradient()
-for s in s0.children:
-    print(s.derivative)
+# s0.derivative = 1
+# s0.pass_gradient()
+# for s in s0.children:
+#     print(s.derivative)
