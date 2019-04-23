@@ -32,12 +32,12 @@ S = SPN(root, [rv1, rv2])
 # print(goThrough(S.root))
 
 # compute the join probability
-print(S.prod([rv1, rv2], data))
+print(S.prob([rv1, rv2], data))
 
-# compute the marginal or rv1 (sum out rv2)
-print(S.prod([rv1], data[[0], :]))
+# compute the marginal of rv1 (sum out rv2)
+print(S.prob([rv1], data[[0], :]))
 
 # alternative to data matrix, value can be directly assign to random variables
-print(S.prod([rv1, rv2], [0, 1]))
+print(S.prob([rv1, rv2], [0, 1]))
 
 S.train(data, iterations=1000, step_size=5)

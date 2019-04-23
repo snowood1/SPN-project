@@ -112,7 +112,7 @@ class SPN:
             root.scope = scope
             return scope
 
-    def prod(self, obs_rvs, data):
+    def prob(self, obs_rvs, data):
         remaining_rvs = set(self.rvs)
 
         for i, rv in enumerate(obs_rvs):
@@ -130,7 +130,7 @@ class SPN:
         return res / np.sum(res)
 
     def update_weight(self, data, step_size=1):
-        print(self.prod(self.rvs, data))
+        print(self.prob(self.rvs, data))
 
         s_g = {self.root: 1}
         for n in self.nodes:
