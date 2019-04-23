@@ -1,4 +1,5 @@
 from SumProductNets import *
+from NetGenerator import NetGenerator, goThrough
 import numpy as np
 
 # each column is a data point
@@ -17,13 +18,18 @@ X2 = RVNode(rv2)
 X3 = RVNode(rv1)
 X4 = RVNode(rv2)
 
+rv_list = [rv1, rv2]
+test_gen = NetGenerator(2, rv_list, sum_replicate=2)
+
 # build SPN tree
 S_prod1 = ProductNode([X1, X2])
 S_prod2 = ProductNode([X3, X4])
 
-root = SumNode([S_prod1, S_prod2])
+# root = SumNode([S_prod1, S_prod2])
+root = test_gen.generate()
 
 S = SPN(root, [rv1, rv2])
+# print(goThrough(S.root))
 
 # compute the join probability
 print(S.prod([rv1, rv2], data))

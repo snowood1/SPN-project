@@ -1,4 +1,7 @@
 import numpy as np
+import pickle
+import os
+
 from SumProductNets import *
 from random import shuffle
 
@@ -7,7 +10,7 @@ from random import shuffle
 class NetGenerator(object):
     def __init__(self, num_feature, rv_list, sum_replicate=2, prod_replicate=2):
         self.features = list(range(num_feature))
-        self.rv_node_list = rv_list
+        self.rv_list = rv_list
         self.sum_rep = sum_replicate
         self.prod_rep = prod_replicate
 
@@ -19,7 +22,7 @@ class NetGenerator(object):
         if len(var_list) == 0:
             return None
         elif len(var_list) == 1:
-            return self.rv_node_list[var_list[0]]
+            return RVNode(self.rv_list[var_list[0]])
 
         # Deal with general cases
         children = []
@@ -41,6 +44,16 @@ class NetGenerator(object):
             return ProductNode(children)
 
 
+def save2file(path, root):
+    with open(path, 'wb') as f:
+        pickle.dump(root, f)
+
+
+def read_from_file(path):
+    with open(path, 'rb') as f:
+        return pickle.load(f)
+
+
 def goThrough(node):
     res = 1
     for ch in node.ch:
@@ -50,10 +63,13 @@ def goThrough(node):
 
 
 def main():
-    test_rv = [RVNode(RV(domain=[0, 1])) for _ in range(788)]
-    test_gen = NetGenerator(788, test_rv, prod_replicate=3)
+    test_rv = [RVNode(RV(domain=[0, 1])) for _ in range(2)]
+    test_gen = NetGenerator(2, test_rv, sum_replicate=2, prod_replicate=2)
     root = test_gen.generate()
     test_spn = SPN(root, test_rv)
+    # save2file(os.getcwd() + "/test.obj", test_spn)
+    print(goThrough(test_spn.root))
+    test_spn = read_from_file(os.getcwd() + "/test.obj")
     print(goThrough(test_spn.root))
 
 

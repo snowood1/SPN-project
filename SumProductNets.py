@@ -66,7 +66,7 @@ class RV:
         self.value = None
         self.leaf_node_value = None
         if name is None:
-            self.name = 'RV#' + next(self.id_counter)
+            self.name = 'RV#' + str(next(self.id_counter))
         else:
             self.name = name
 
