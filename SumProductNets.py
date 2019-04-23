@@ -38,9 +38,11 @@ class LeafNode:
     def __init__(self, rv, domain_idx):
         self.rv = rv
         self.domain_idx = domain_idx
+        self.value = None
 
     def eval(self):
-        return self.rv.leaf_node_value[self.domain_idx]
+        self.value = self.rv.leaf_node_value[self.domain_idx]
+        return self.value
 
 
 class RVNode(SumNode):
@@ -91,6 +93,15 @@ class SPN:
         self.rvs = rvs
         self.init_scope(root)
 
+        self.nodes = list()  # a top down list of nodes
+
+        queue = [root]
+        while len(queue) > 0:
+            n = queue.pop(0)
+            self.nodes.append(n)
+            if type(n) is not LeafNode:
+                queue.extend(n.ch)
+
     def init_scope(self, root):
         if type(root) is not RVNode:
             return root.scope
@@ -112,3 +123,39 @@ class SPN:
             rv.set_value(None)
 
         return self.root.eval()
+
+    @staticmethod
+    def softmax(x):
+        res = np.e ** x
+        return res / np.sum(res)
+
+    def update_weight(self, data, step_size=1):
+        print(self.prod(self.rvs, data))
+
+        s_g = {self.root: 1}
+        for n in self.nodes:
+            if isinstance(n, SumNode):
+                w_g = np.zeros(len(n.ch))
+                for idx, j in enumerate(n.ch):
+                    s_g[j] = s_g.get(j, 0) + n.w[idx] * s_g[n]
+                    w_g[idx] = np.average(s_g[n] * j.value)
+                tau_g = n.w * (w_g - np.sum(w_g * n.w))
+                n.tau += tau_g * step_size
+                n.w = self.softmax(n.tau)
+
+            elif isinstance(n, ProductNode):
+                for j in n.ch:
+                    temp = 1
+                    for k in n.ch:
+                        if k is not j:
+                            temp *= k.value
+                    s_g[j] = s_g.get(j, 0) + s_g[n] * temp
+
+    def train(self, data, iterations=100, step_size=1):
+        for n in self.nodes:
+            if isinstance(n, SumNode):
+                n.tau = np.zeros(len(n.ch))
+
+        for itr in range(iterations):
+            print('iteration:', itr)
+            self.update_weight(data, step_size)

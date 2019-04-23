@@ -3,8 +3,8 @@ import numpy as np
 
 # each column is a data point
 data = np.array([
-    [0, 1, 1],
-    [1, 1, 0]
+    [1, 0, 0],
+    [0, 1, 0]
 ])
 
 # create random variables
@@ -33,3 +33,5 @@ print(S.prod([rv1], data[[0], :]))
 
 # alternative to data matrix, value can be directly assign to random variables
 print(S.prod([rv1, rv2], [0, 1]))
+
+S.train(data, iterations=1000, step_size=5)
