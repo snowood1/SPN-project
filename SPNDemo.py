@@ -19,7 +19,7 @@ X3 = RVNode(rv1)
 X4 = RVNode(rv2)
 
 rv_list = [rv1, rv2]
-test_gen = NetGenerator(2, rv_list, sum_replicate=2)
+test_gen = NetGenerator(2, rv_list, sum_replicate=(2, 6), prod_replicate=(2, 6))
 
 # build SPN tree
 S_prod1 = ProductNode([X1, X2])
