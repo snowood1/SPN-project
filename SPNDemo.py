@@ -41,3 +41,7 @@ print(S.prob([rv1], data[[0], :]))
 print(S.prob([rv1, rv2], [0, 1]))
 
 S.train(data, iterations=1000, step_size=5)
+
+S.print_weight()
+
+print(S.prob([rv1, rv2], data))

@@ -3,7 +3,7 @@ import itertools
 
 
 class SumNode:
-    def __init__(self, ch, w=None):
+    def __init__(self, ch, w=None, name=None):
         self.ch = ch
         if w is None:
             self.w = np.ones(len(ch)) / len(ch)
@@ -12,6 +12,13 @@ class SumNode:
         self.p = list()
         self.scope = set()
         self.value = None
+        self.name = name
+
+    def __str__(self):
+        if self.name is None:
+            return self.__repr__()
+        else:
+            return self.name
 
     def eval(self):
         # return single value or a numpy array of values
@@ -20,11 +27,18 @@ class SumNode:
 
 
 class ProductNode:
-    def __init__(self, ch):
+    def __init__(self, ch, name=None):
         self.ch = ch
         self.p = list()
         self.scope = set()
         self.value = None
+        self.name = name
+
+    def __str__(self):
+        if self.name is None:
+            return self.__repr__()
+        else:
+            return self.name
 
     def eval(self):
         # return single value or a numpy array of values
@@ -57,21 +71,22 @@ class RVNode(SumNode):
 
         self.scope = {rv}
 
+    def __str__(self):
+        return self.rv.name
+
 
 class RV:
-    id_counter = itertools.count()
-
     def __init__(self, domain, name=None):
         self.domain = domain
         self.value = None
         self.leaf_node_value = None
-        if name is None:
-            self.name = 'RV#' + str(next(self.id_counter))
-        else:
-            self.name = name
+        self.name = name
 
     def __str__(self):
-        return self.name
+        if self.name is None:
+            return self.__repr__()
+        else:
+            return self.name
 
     def set_value(self, value):
         self.value = value
@@ -102,6 +117,11 @@ class SPN:
             if type(n) is not LeafNode:
                 queue.extend(n.ch)
 
+    def print_weight(self):
+        for n in self.nodes:
+            if isinstance(n, SumNode):
+                print(n, n.w)
+
     def init_scope(self, root):
         if type(root) is not RVNode:
             return root.scope
@@ -130,7 +150,7 @@ class SPN:
         return res / np.sum(res)
 
     def update_weight(self, data, step_size=1):
-        print(self.prob(self.rvs, data))
+        self.prob(self.rvs, data)
 
         s_g = {self.root: 1}
         for n in self.nodes:
@@ -154,7 +174,8 @@ class SPN:
     def train(self, data, iterations=100, step_size=1):
         for n in self.nodes:
             if isinstance(n, SumNode):
-                n.tau = np.zeros(len(n.ch))
+                n.tau = np.random.rand(len(n.ch))
+                n.w = self.softmax(n.tau)
 
         for itr in range(iterations):
             print('iteration:', itr)
