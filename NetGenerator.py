@@ -1,6 +1,4 @@
-import numpy as np
 import pickle
-import os
 
 from SumProductNets import *
 from random import shuffle, randint
@@ -34,6 +32,7 @@ class NetGenerator(object):
         # Deal with base case, where the length of var_list equals one or zero
         if len(var_list) == 0:
             return None
+
         elif len(var_list) == 1:
             return RVNode(self.rv_list[var_list[0]])
 
@@ -67,9 +66,9 @@ class NetGenerator(object):
             return ProductNode(children)
 
 
-def save2file(path, root):
+def save2file(path, obj):
     with open(path, 'wb') as f:
-        pickle.dump(root, f)
+        pickle.dump(obj, f)
 
 
 def read_from_file(path):
