@@ -150,9 +150,7 @@ class SPN:
         return res / np.sum(res)
 
     def update_weight(self, data, step_size=1):
-        self.prob(self.rvs, data)
-
-        s_g = {self.root: 1}
+        s_g = {self.root: self.prob(self.rvs, data) ** -1}
         for n in self.nodes:
             if isinstance(n, SumNode):
                 w_g = np.zeros(len(n.ch))
