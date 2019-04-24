@@ -1,5 +1,4 @@
 import numpy as np
-import itertools
 
 
 class SumNode:
@@ -25,6 +24,16 @@ class SumNode:
         self.value = self.w @ [i.eval() for i in self.ch]
         return self.value
 
+    def map_eval(self):
+        # do not support batch operation
+        self.value = self.w * [i.map_eval() for i in self.ch]
+        return np.max(self.value)
+
+    def map_back_track(self, output):
+        # output is a dict
+        i = self.ch[np.argmax(self.value)]
+        i.map_back_track(output)
+
 
 class ProductNode:
     def __init__(self, ch, name=None):
@@ -47,25 +56,23 @@ class ProductNode:
             self.value *= i.eval()
         return self.value
 
-
-class LeafNode:
-    def __init__(self, rv, domain_idx):
-        self.rv = rv
-        self.domain_idx = domain_idx
-        self.value = None
-
-    def eval(self):
-        self.value = self.rv.leaf_node_value[self.domain_idx]
+    def map_eval(self):
+        self.value = 1
+        for i in self.ch:
+            self.value *= i.map_eval()
         return self.value
+
+    def map_back_track(self, output):
+        # output is a dict
+        for i in self.ch:
+            i.map_back_track(output)
 
 
 class RVNode(SumNode):
     def __init__(self, rv, w=None):
         self.rv = rv
 
-        ch = list()
-        for idx in range(len(rv.domain)):
-            ch.append(LeafNode(rv, idx))
+        ch = rv.leaf_nodes
 
         SumNode.__init__(self, ch, w)
 
@@ -75,11 +82,30 @@ class RVNode(SumNode):
         return self.rv.name
 
 
+class LeafNode:
+    def __init__(self, rv, domain_value):
+        self.rv = rv
+        self.domain_value = domain_value
+        self.value = None
+
+    def eval(self):
+        return self.value
+
+    def map_eval(self):
+        return self.value
+
+    def map_back_track(self, output):
+        # output is a dict
+        output[self.rv] = self.domain_value
+
+
 class RV:
     def __init__(self, domain, name=None):
         self.domain = domain
         self.value = None
-        self.leaf_node_value = None
+        self.leaf_nodes = list()
+        for d in domain:
+            self.leaf_nodes.append(LeafNode(self, d))
         self.name = name
 
     def __str__(self):
@@ -90,16 +116,13 @@ class RV:
 
     def set_value(self, value):
         self.value = value
-        self.leaf_node_value = list()
-        for d in self.domain:
+        for i, d in zip(self.leaf_nodes, self.domain):
             if value is None:
                 # when the value of rv is unknown, set all leaf node to one
-                leaf_value = 1
+                i.value = 1
             else:
                 # when the value of rv is known, set the right leaf node to one, others to zero
-                leaf_value = np.where(value == d, 1, 0)
-
-            self.leaf_node_value.append(leaf_value)
+                i.value = np.where(value == d, 1, 0)
 
 
 class SPN:
@@ -132,7 +155,7 @@ class SPN:
             root.scope = scope
             return scope
 
-    def prob(self, obs_rvs, data):
+    def insert_data(self, obs_rvs, data):
         remaining_rvs = set(self.rvs)
 
         for i, rv in enumerate(obs_rvs):
@@ -142,7 +165,19 @@ class SPN:
         for rv in remaining_rvs:
             rv.set_value(None)
 
+    def prob(self, obs_rvs, data):
+        self.insert_data(obs_rvs, data)
         return self.root.eval()
+
+    def map(self, obs_rvs, data):
+        # do not support batch operation
+        self.insert_data(obs_rvs, data)
+
+        output = dict()
+        self.root.map_eval()
+        self.root.map_back_track(output)
+
+        return np.array([output[rv] for rv in self.rvs])
 
     @staticmethod
     def softmax(x):
@@ -169,11 +204,14 @@ class SPN:
                             temp *= k.value
                     s_g[j] = s_g.get(j, 0) + s_g[n] * temp
 
-    def train(self, data, iterations=100, step_size=1):
+    def init_tau(self):
         for n in self.nodes:
             if isinstance(n, SumNode):
                 n.tau = np.random.rand(len(n.ch))
                 n.w = self.softmax(n.tau)
+
+    def train(self, data, iterations=100, step_size=1):
+        self.init_tau()
 
         for itr in range(iterations):
             print('iteration:', itr)
