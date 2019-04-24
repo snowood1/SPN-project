@@ -86,8 +86,8 @@ def goThrough(node):
 
 
 def main():
-    test_rv = [RV(domain=[0, 1]) for _ in range(2)]
-    test_gen = NetGenerator(2, test_rv, sum_replicate=2, prod_replicate=3)
+    test_rv = [RV(domain=[0, 1]) for _ in range(788)]
+    test_gen = NetGenerator(788, test_rv, sum_replicate=2, prod_replicate=4)
     root = test_gen.generate()
     test_spn = SPN(root, test_rv)
     # save2file(os.getcwd() + "/test.obj", test_spn)
