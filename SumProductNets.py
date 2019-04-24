@@ -204,15 +204,14 @@ class SPN:
                             temp *= k.value
                     s_g[j] = s_g.get(j, 0) + s_g[n] * temp
 
-    def init_tau(self):
+    def init_weight(self):
         for n in self.nodes:
             if isinstance(n, SumNode):
                 n.tau = np.random.rand(len(n.ch))
                 n.w = self.softmax(n.tau)
 
     def train(self, data, iterations=100, step_size=1):
-        self.init_tau()
+        self.init_weight()
 
         for itr in range(iterations):
-            print('iteration:', itr)
             self.update_weight(data, step_size)
