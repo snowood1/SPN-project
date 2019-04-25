@@ -18,10 +18,10 @@ data_set = MNIST(data_path,  train=True, transform=tfs.Compose([tfs.ToTensor()])
 target_dl = DataLoader(data_set, batch_size=64, shuffle=True)
 
 
-def get_data_loader(path=os.getcwd().join('/mnist')):
+def get_data_loader(path=os.getcwd().join('/mnist'), batch_size=64):
     data_set = MNIST(path, train=True, transform=tfs.Compose([tfs.ToTensor()]), download=True)
     data_set = Subset(data_set, indices=list(range(_DATA_SIZE)))
-    return DataLoader(data_set, batch_size=64, shuffle=True, drop_last=True)
+    return DataLoader(data_set, batch_size=batch_size, shuffle=True, drop_last=True)
 
 
 # Stupid transformer s.t. convert integer to 4-bit binary
@@ -35,8 +35,12 @@ def stupid_tfs(input_tensor):
     return torch.from_numpy(np.asarray(res, dtype=int))
 
 
-def generate_data(feature, label):
+def generate_data(feature, label, feature_only=False):
     feature = (feature >= _GRAYSCALE_THRESHOLD).long().reshape(-1, _IMAGE_SIZE ** 2)
+
+    if feature_only:
+        return feature.reshape(-1)
+
     label = stupid_tfs(label).reshape(-1, 4)
     res = torch.cat((feature, label), 1).numpy().T
 

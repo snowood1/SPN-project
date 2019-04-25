@@ -2,6 +2,8 @@ import pickle
 
 from SumProductNets import *
 from random import shuffle, randint
+import os
+import json
 
 
 # Network generator -- generate network with single parent
@@ -68,30 +70,36 @@ class NetGenerator(object):
 
 def save2file(path, obj):
     with open(path, 'wb') as f:
-        pickle.dump(obj, f)
+        json.dump(obj.__dict__, f)
 
 
-def read_from_file(path):
+def read_from_file(path, cls):
     with open(path, 'rb') as f:
-        return pickle.load(f)
+        obj_setting = json.load(f)
+        instance = object.__new__(cls)
+
+        for k, v in obj_setting:
+            setattr(instance, k, v)
+
+        return instance
 
 
 def goThrough(node):
-    res = 1
+    print(node.convert2json())
     for ch in node.ch:
         if not isinstance(ch, LeafNode):
-            res += goThrough(ch)
-    return res
+            goThrough(ch)
 
 
 def main():
-    test_rv = [RV(domain=[0, 1]) for _ in range(788)]
-    test_gen = NetGenerator(788, test_rv, sum_replicate=2, prod_replicate=4)
+    test_rv = [RV(domain=[0, 1]) for _ in range(4)]
+    test_gen = NetGenerator(4, test_rv, sum_replicate=2, prod_replicate=2)
     root = test_gen.generate()
     test_spn = SPN(root, test_rv)
-    # save2file(os.getcwd() + "/test.obj", test_spn)
-    print(goThrough(test_spn.root))
-    # test_spn = read_from_file(os.getcwd() + "/test.obj")
+    goThrough(test_spn.root)
+    # save2file(os.getcwd() + "/test.json", test_spn)
+    # print(goThrough(test_spn.root))
+    # test_spn = read_from_file(os.getcwd() + "/test.json", SPN)
     # print(goThrough(test_spn.root))
 
 
