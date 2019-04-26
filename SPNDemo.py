@@ -39,15 +39,15 @@ print(S.prob([rv1], data[[0], :]))
 print(S.prob([rv1, rv2], [0, 1]))
 
 # training
-# S.train(data, iterations=1000, step_size=5)
+S.train(data, iterations=1000, step_size=5)
 
 # batch training
-S.init_weight()
-for itr in range(100):
-    batch_idx = np.random.choice(m, 3)  # batch size is 3
-    batch = data[:, batch_idx]
-    for batch_itr in range(10):
-        S.update_weight(batch, step_size=0.01)
+# S.init_weight()
+# for itr in range(100):
+#     batch_idx = np.random.choice(m, 3)  # batch size is 3
+#     batch = data[:, batch_idx]
+#     for batch_itr in range(10):
+#         S.update_weight(batch, step_size=0.01)
 
 S.print_weight()
 print(S.prob([rv1, rv2], data))
@@ -56,3 +56,8 @@ print(S.prob([rv1, rv2], data))
 print(S.map([], []))
 print(S.map([rv1], [0]))
 print(S.map([rv2], [1]))
+
+# save_spn('spn', S)
+
+# S, [rv1, rv2] = load_spn('spn')
+# print(S.prob([rv1, rv2], data))

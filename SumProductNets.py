@@ -1,5 +1,4 @@
 import numpy as np
-import json
 
 
 class SumNode:
@@ -13,7 +12,6 @@ class SumNode:
         self.scope = set()
         self.value = None
         self.name = name
-        self.idx = None
 
     def __str__(self):
         if self.name is None:
@@ -36,17 +34,6 @@ class SumNode:
         i = self.ch[np.argmax(self.value)]
         i.map_back_track(output)
 
-    def set_idx(self, idx):
-        self.idx = idx
-
-    def convert2json(self):
-        tmp_map = {'ch': [ch.idx for ch in self.ch],
-                   'weight': self.w.tolist(),
-                   'name': self.name,
-                   'type': 's'}
-        return json.dumps(tmp_map)
-
-
 
 class ProductNode:
     def __init__(self, ch, name=None):
@@ -55,7 +42,6 @@ class ProductNode:
         self.scope = set()
         self.value = None
         self.name = name
-        self.idx = None
 
     def __str__(self):
         if self.name is None:
@@ -81,16 +67,6 @@ class ProductNode:
         for i in self.ch:
             i.map_back_track(output)
 
-    def set_idx(self, idx):
-        self.idx = idx
-
-    def convert2json(self):
-        tmp_map = {'ch': [ch.idx for ch in self.ch],
-                   'weight': None,
-                   'name': self.name,
-                   'type': 'p'}
-        return json.dumps(tmp_map)
-
 
 class RVNode(SumNode):
     def __init__(self, rv, w=None):
@@ -105,20 +81,12 @@ class RVNode(SumNode):
     def __str__(self):
         return self.rv.name
 
-    def convert2json(self):
-        tmp_map = {'ch': None,
-                   'weight': self.w.tolist(),
-                   'name': self.name,
-                   'type': 'rv'}
-        return json.dumps(tmp_map)
-
 
 class LeafNode:
     def __init__(self, rv, domain_value):
         self.rv = rv
         self.domain_value = domain_value
         self.value = None
-        self.idx = None
 
     def eval(self):
         return self.value
@@ -129,9 +97,6 @@ class LeafNode:
     def map_back_track(self, output):
         # output is a dict
         output[self.rv] = self.domain_value
-
-    def set_idx(self, idx):
-        self.idx = idx
 
 
 class RV:
@@ -161,28 +126,18 @@ class RV:
 
 
 class SPN:
-    def __init__(self, root, rvs, empty=False):
-        if not empty:
-            self.root = root
-            self.rvs = rvs
-            self.init_scope(root)
+    def __init__(self, root, rvs):
+        self.root = root
+        self.rvs = rvs
+        self.init_scope(root)
 
-            self.nodes = list()  # a top down list of nodes
+        self.nodes = list()  # a top down list of nodes
 
-            self._create_node_list()
-        else:
-            self.root = None
-            self.rvs = None
-            self.nodes = list()
-
-    def _create_node_list(self):
-        assert self.root is not None
-        queue = [self.root]
+        queue = [root]
         while len(queue) > 0:
             n = queue.pop(0)
             self.nodes.append(n)
-            n.set_idx(len(self.nodes) - 1)
-            if not isinstance(n, LeafNode):
+            if type(n) is not LeafNode:
                 queue.extend(n.ch)
 
     def print_weight(self):
@@ -230,7 +185,8 @@ class SPN:
         return res / np.sum(res)
 
     def update_weight(self, data, step_size=1):
-        s_g = {self.root: self.prob(self.rvs, data) ** -1}
+        s_g = {self.root: self.prob(self.rvs, data) ** -1}  # gradient normalization term
+
         for n in self.nodes:
             if isinstance(n, SumNode):
                 w_g = np.zeros(len(n.ch))
@@ -238,8 +194,8 @@ class SPN:
                     s_g[j] = s_g.get(j, 0) + n.w[idx] * s_g[n]
                     w_g[idx] = np.average(s_g[n] * j.value)
                 tau_g = n.w * (w_g - np.sum(w_g * n.w))
-                n.tau += tau_g * step_size
-                n.w = self.softmax(n.tau)
+                tau = np.log(n.w) + tau_g * step_size
+                n.w = self.softmax(tau)
 
             elif isinstance(n, ProductNode):
                 for j in n.ch:
@@ -252,34 +208,11 @@ class SPN:
     def init_weight(self):
         for n in self.nodes:
             if isinstance(n, SumNode):
-                n.tau = np.random.rand(len(n.ch))
-                n.w = self.softmax(n.tau)
+                tau = np.random.rand(len(n.ch))
+                n.w = self.softmax(tau)
 
     def train(self, data, iterations=100, step_size=1):
         self.init_weight()
 
         for itr in range(iterations):
             self.update_weight(data, step_size)
-
-    def save_setting(self, src_path=None):
-        # TODO
-        with open(src_path, 'w') as f:
-            for eachNode in self.nodes:
-                f.write(eachNode.convert2json())
-
-    def load_setting(self, src_path):
-        # TODO -- Generate nodes_list first ?
-        with open(src_path, 'r') as f:
-            lines = f.readlines()
-            self.nodes = [None for _ in range(lines.__len__())]
-            rec_idx = len(self.nodes) - 1
-            for eachLine in reversed(lines):
-                tmp_map = json.load(eachLine)
-                if tmp_map['type'] == 's':
-                    pass
-                elif tmp_map['type'] == 'p':
-                    pass
-                else:
-                    # must be rv node ?
-                    pass
-        pass
