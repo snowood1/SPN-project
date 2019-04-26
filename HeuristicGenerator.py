@@ -6,6 +6,8 @@ class HeuristicGenerator(object):
     def __init__(self, rv_list):
         self.rv_list = rv_list
         self.features = list(range(len(rv_list)))
+        self.sum_rep = 2
+        self.prod_rep = 2
 
     def generate(self):
         return self._create_node(self.features, True)
@@ -46,9 +48,16 @@ class HeuristicGenerator(object):
             #     if tmp_node is not None:
             #         children.append(tmp_node)
             for c_id in range(0, len(var_list), sub_size):
+                if var_list == []:
+                    break
                 tmp_node = []
                 for i in range(sub_size):
-
+                    if var_list == []:
+                        break
+                    index = self.add_node_index(tmp_node, var_list)
+                    tmp_node.append(var_list[index])
+                    var_list.pop(index)
+                children.append(self._create_node(tmp_node, True))
 
             return ProductNode(children)
 
@@ -101,3 +110,28 @@ class HeuristicGenerator(object):
             if r <= prob_list[i]:
                 return i
         return -1
+
+    def add_node_index(self, list1, list2):
+        return randint(0, len(list2)-1)
+
+def goThrough(node):
+    print(node.convert2json())
+    for ch in node.ch:
+        if not isinstance(ch, LeafNode):
+            goThrough(ch)
+
+
+def main():
+    test_rv = [RV(domain=[0, 1]) for _ in range(4)]
+    test_gen = HeuristicGenerator(4, test_rv, sum_replicate=2, prod_replicate=2)
+    root = test_gen.generate()
+    test_spn = SPN(root, test_rv)
+    goThrough(test_spn.root)
+    # save2file(os.getcwd() + "/test.json", test_spn)
+    # print(goThrough(test_spn.root))
+    # test_spn = read_from_file(os.getcwd() + "/test.json", SPN)
+    # print(goThrough(test_spn.root))
+
+
+if __name__ == "__main__":
+    main()
