@@ -115,7 +115,7 @@ class HeuristicGenerator(object):
         return randint(0, len(list2)-1)
 
 def goThrough(node):
-    print(node.convert2json())
+    # print(node.convert2json())
     for ch in node.ch:
         if not isinstance(ch, LeafNode):
             goThrough(ch)
@@ -123,7 +123,7 @@ def goThrough(node):
 
 def main():
     test_rv = [RV(domain=[0, 1]) for _ in range(4)]
-    test_gen = HeuristicGenerator(4, test_rv, sum_replicate=2, prod_replicate=2)
+    test_gen = HeuristicGenerator(test_rv)
     root = test_gen.generate()
     test_spn = SPN(root, test_rv)
     goThrough(test_spn.root)
