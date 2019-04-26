@@ -48,6 +48,7 @@ class HeuristicGenerator(object):
             #     if tmp_node is not None:
             #         children.append(tmp_node)
             for c_id in range(0, len(var_list), sub_size):
+                # node_ =
                 if var_list == []:
                     break
                 tmp_node = []
@@ -57,6 +58,7 @@ class HeuristicGenerator(object):
                     index = self.add_node_index(tmp_node, var_list)
                     tmp_node.append(var_list[index])
                     var_list.pop(index)
+                    print(index, var_list)
                 children.append(self._create_node(tmp_node, True))
 
             return ProductNode(children)
@@ -64,18 +66,19 @@ class HeuristicGenerator(object):
     def coordinate(self, val, num):
         if val >= num ** 2:
             return -num, -num
-        x = int (val % num)
+        x = int(val % num)
         y = int(val // num)
         return x, y
 
-    def center(self, list):
+    def center(self, list, num):
         total_x = 0
         total_y = 0
         for i in list:
-            x, y = self.coordinate(i)
+            x, y = self.coordinate(i, num)
             total_x += x
             total_y += y
-        return x / len(list), y / len(list)
+        print(total_x)
+        return total_x / len(list), total_y / len(list)
 
     def euclidean_distance(self, x1, y1, x2, y2):
         return math.sqrt(((x1 - x2) ** 2) + ((y1 - y2) ** 2))
@@ -83,39 +86,43 @@ class HeuristicGenerator(object):
     def manhattan_distance(self, x1, y1, x2, y2):
         return abs(x1 - x2) + abs(y1 - y2)
 
-    def weight_node(self, list, node):
-        x1, y1 = self.center(list)
-        x2, y2 = self.coordinate(node)
+    def weight_node(self, list1, node, num):
+        x1, y1 = self.center(list1, num)
+        x2, y2 = self.coordinate(node, num)
         return 1 / self.euclidean_distance(x1, y1, x2, y2)
 
-    def conditoanl_probability(self, list1, list2):
+    def conditoanl_probability(self, list1, list2, num):
         list3 = []
         normalizer = 0.0
 
         for node in list2:
-            val = self.weight_node(list, node)
+            val = self.weight_node(list1, node, num)
             list3.append(val)
             normalizer += val
 
-        for i in range(list3):
+        for i in range(len(list3)):
             list3[i] = list3[i] / normalizer
 
         return list3
 
     def make_selection(self, prob_list):
         for i in range(1, len(prob_list)):
-            prob_list[i] = prob_list[i-1] + prob_list[i]
+            prob_list[i] = prob_list[i - 1] + prob_list[i]
         r = random()
+        # print(r)
         for i in range(len(prob_list)):
             if r <= prob_list[i]:
                 return i
         return -1
 
     def add_node_index(self, list1, list2):
-        return randint(0, len(list2)-1)
+        return randint(0, len(list2) - 1)
+
+    def convert_to_plain(self, x, y, num):
+        return num * y + x
 
 def goThrough(node):
-    # print(node.convert2json())
+    # print(node.scope)
     for ch in node.ch:
         if not isinstance(ch, LeafNode):
             goThrough(ch)
