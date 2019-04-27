@@ -19,6 +19,7 @@ class HeuristicGenerator(object):
             return None
 
         elif len(var_list) == 1:
+            print(self.rv_list[var_list[0]])
             return RVNode(self.rv_list[var_list[0]])
 
         children = []
@@ -28,8 +29,9 @@ class HeuristicGenerator(object):
                 current_replicate = randint(self.sum_rep[0], self.sum_rep[1])
             else:
                 current_replicate = self.sum_rep
-            for _ in range(current_replicate):
-                tmp_node = self._create_node(var_list, False)
+            for i in range(current_replicate):
+                new_list = var_list * 1
+                tmp_node = self._create_node(new_list, False)
                 if tmp_node is not None:
                     children.append(tmp_node)
             return SumNode(children)
@@ -58,7 +60,7 @@ class HeuristicGenerator(object):
                     index = self.add_node_index(tmp_node, var_list)
                     tmp_node.append(var_list[index])
                     var_list.pop(index)
-                    print(index, var_list)
+                print(tmp_node, var_list)
                 children.append(self._create_node(tmp_node, True))
 
             return ProductNode(children)
