@@ -8,6 +8,7 @@ class HeuristicGenerator(object):
         self.features = list(range(len(rv_list)))
         self.sum_rep = 2
         self.prod_rep = 2
+        self.perline = 2
 
     def generate(self):
         return self._create_node(self.features, True)
@@ -19,7 +20,7 @@ class HeuristicGenerator(object):
             return None
 
         elif len(var_list) == 1:
-            print(self.rv_list[var_list[0]])
+            # print(self.rv_list[var_list[0]])
             return RVNode(self.rv_list[var_list[0]])
 
         children = []
@@ -36,8 +37,6 @@ class HeuristicGenerator(object):
                     children.append(tmp_node)
             return SumNode(children)
         else:
-            # Split the var_list into k different subsets, where k equals prod_rep
-            # shuffle(var_list)
             if isinstance(self.prod_rep, tuple):
                 current_replicate = randint(self.prod_rep[0], self.prod_rep[1])
             else:
@@ -45,41 +44,38 @@ class HeuristicGenerator(object):
             sub_size = len(var_list) // current_replicate
 
             sub_size = sub_size if sub_size != 0 else 1
-            # for c_id in range(0, len(var_list), sub_size):
-            #     tmp_node = self._create_node(var_list[c_id:c_id + sub_size], True)
-            #     if tmp_node is not None:
-            #         children.append(tmp_node)
+
             for c_id in range(0, len(var_list), sub_size):
                 # node_ =
                 if var_list == []:
                     break
                 tmp_node = []
+
                 for i in range(sub_size):
                     if var_list == []:
                         break
                     index = self.add_node_index(tmp_node, var_list)
                     tmp_node.append(var_list[index])
                     var_list.pop(index)
-                print(tmp_node, var_list)
+
                 children.append(self._create_node(tmp_node, True))
 
             return ProductNode(children)
 
-    def coordinate(self, val, num):
-        if val >= num ** 2:
-            return -num, -num
-        x = int(val % num)
-        y = int(val // num)
+    def coordinate(self, val):
+        if val >= self.perline ** 2:
+            return -self.perline, -self.perline
+        x = int(val % self.perline)
+        y = int(val // self.perline)
         return x, y
 
-    def center(self, list, num):
+    def center(self, list):
         total_x = 0
         total_y = 0
         for i in list:
-            x, y = self.coordinate(i, num)
+            x, y = self.coordinate(i)
             total_x += x
             total_y += y
-        print(total_x)
         return total_x / len(list), total_y / len(list)
 
     def euclidean_distance(self, x1, y1, x2, y2):
@@ -88,17 +84,22 @@ class HeuristicGenerator(object):
     def manhattan_distance(self, x1, y1, x2, y2):
         return abs(x1 - x2) + abs(y1 - y2)
 
-    def weight_node(self, list1, node, num):
-        x1, y1 = self.center(list1, num)
-        x2, y2 = self.coordinate(node, num)
+    def weight_node(self, list1, node):
+        x1, y1 = self.center(list1)
+        x2, y2 = self.coordinate(node)
         return 1 / self.euclidean_distance(x1, y1, x2, y2)
 
-    def conditoanl_probability(self, list1, list2, num):
+    def conditoanl_probability(self, list1, list2):
         list3 = []
         normalizer = 0.0
 
+        if list1 == []:
+            for _ in list2:
+                list3.append(1.0 / len(list2))
+            return list3
+
         for node in list2:
-            val = self.weight_node(list1, node, num)
+            val = self.weight_node(list1, node)
             list3.append(val)
             normalizer += val
 
@@ -118,13 +119,15 @@ class HeuristicGenerator(object):
         return -1
 
     def add_node_index(self, list1, list2):
-        return randint(0, len(list2) - 1)
+        # return randint(0, len(list2) - 1)
+        prob_list = self.conditoanl_probability(list1, list2)
+        return self.make_selection(prob_list)
 
     def convert_to_plain(self, x, y, num):
         return num * y + x
 
 def goThrough(node):
-    # print(node.scope)
+    print(node.scope)
     for ch in node.ch:
         if not isinstance(ch, LeafNode):
             goThrough(ch)
