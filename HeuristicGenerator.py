@@ -131,7 +131,7 @@ class HeuristicGenerator(object):
     def convert_to_plain(self, x, y, num):
         return num * y + x
 
-    def distance_to_each(self, list1, node):
+    def distance_list_to_each(self, list1, node):
         if list1 == []:
             return -1
         distance_list = []
@@ -140,6 +140,35 @@ class HeuristicGenerator(object):
             x2, y2 = self.coordinate(node)
             distance_list.append(self.euclidean_distance(x1, y1, x2, y2))
         return distance_list
+
+    def distance_list_to_list(self, list1, list2):
+        distance_matrix = []
+        if list1 == [] or list2 == []:
+            return -1
+        for i in range(len(list2)):
+            distance_matrix.append(self.distance_list_to_each(list1, list2[i]))
+        return distance_matrix
+
+    def harmonic_mean(self, list1):
+        temp = 0.0
+        for i in list1:
+            if i == 0:
+                temp += 1.0
+            else:
+                temp += 1.0 / i
+        if temp == 0:
+            result = 1.0
+        else:
+            result = len(list1) / temp
+        return result
+
+    def geometic_mean(self, list1):
+        temp = 1.0
+        for i in list1:
+            if i == 0:
+                continue
+            else:
+                temp *= i
 
 def goThrough(node):
     print(node.scope)
