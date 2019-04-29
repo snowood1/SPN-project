@@ -8,7 +8,7 @@ class HeuristicGenerator(object):
         self.features = list(range(len(rv_list)))
         self.sum_rep = 2
         self.prod_rep = 2
-        self.perline = 2
+        self.perline = 12
 
     def generate(self):
         return self._create_node(self.features, True)
@@ -87,7 +87,11 @@ class HeuristicGenerator(object):
     def weight_node(self, list1, node):
         x1, y1 = self.center(list1)
         x2, y2 = self.coordinate(node)
-        return 1 / self.euclidean_distance(x1, y1, x2, y2)
+        # print(x1, y1, x2, y2)
+        result = self.euclidean_distance(x1, y1, x2, y2)
+        if result == 0:
+            result = 1
+        return 1 / result
 
     def conditoanl_probability(self, list1, list2):
         list3 = []
@@ -100,6 +104,7 @@ class HeuristicGenerator(object):
 
         for node in list2:
             val = self.weight_node(list1, node)
+            # print(list1, node)
             list3.append(val)
             normalizer += val
 
@@ -126,6 +131,16 @@ class HeuristicGenerator(object):
     def convert_to_plain(self, x, y, num):
         return num * y + x
 
+    def distance_to_each(self, list1, node):
+        if list1 == []:
+            return -1
+        distance_list = []
+        for i in range(len(list1)):
+            x1, y1 = self.coordinate(list1[i])
+            x2, y2 = self.coordinate(node)
+            distance_list.append(self.euclidean_distance(x1, y1, x2, y2))
+        return distance_list
+
 def goThrough(node):
     print(node.scope)
     for ch in node.ch:
@@ -134,7 +149,7 @@ def goThrough(node):
 
 
 def main():
-    test_rv = [RV(domain=[0, 1]) for _ in range(4)]
+    test_rv = [RV(domain=[0, 1]) for _ in range(144)]
     test_gen = HeuristicGenerator(test_rv)
     root = test_gen.generate()
     test_spn = SPN(root, test_rv)
