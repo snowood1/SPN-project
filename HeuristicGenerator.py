@@ -87,8 +87,14 @@ class HeuristicGenerator(object):
     def weight_node(self, list1, node):
         x1, y1 = self.center(list1)
         x2, y2 = self.coordinate(node)
-        # print(x1, y1, x2, y2)
         result = self.euclidean_distance(x1, y1, x2, y2)
+
+        list2 = []
+        for x in list1:
+            x1, y1 = self.coordinate(x)
+            x2, y2 = self.coordinate(node)
+            list2.append(self.euclidean_distance(x1, y1, x2, y2))
+        result = self.harmonic_mean(list2)
         if result == 0:
             result = 1
         return 1 / result
@@ -169,6 +175,15 @@ class HeuristicGenerator(object):
                 continue
             else:
                 temp *= i
+
+    def geometric_mean_with_log(self, list1):
+        temp = 0.0
+        for i in list1:
+            if i == 0:
+                continue
+            else:
+                temp += math.log(i)
+        return math.exp(temp / len(list1))
 
 def goThrough(node):
     print(node.scope)
