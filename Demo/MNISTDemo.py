@@ -29,14 +29,17 @@ def main(load=False):
 
     # Train the model from scratch
     if not load:
-        S = SPN(test_gen.generate('generic'), rv_list)
+        S = SPN(test_gen.generate('forest'), rv_list)
         S.init_weight()
-        mnist_dl = get_data_loader()
-        for iters in range(100):
-            print("iter " + str(iters+1))
-            for f, _ in mnist_dl:
-                inter = generate_data(f, None, feature_only=True)
-                S.update_weight(inter, step_size=1e-2)
+        mnist_dl = get_data_loader(batch_size=1000)
+        for f, _ in mnist_dl:
+            inter = generate_data(f, None, feature_only=True)
+            S.train(inter, iterations=100, step_size=.1)
+        # for iters in range(100):
+        #     print("iter " + str(iters+1))
+        #     for f, _ in mnist_dl:
+        #         inter = generate_data(f, None, feature_only=True)
+        #         S.update_weight(inter, step_size=1e-3)
 
         # S.print_weight()
         # save2file(os.getcwd() + "/spn_with_weight.obj", S)

@@ -11,7 +11,7 @@ co_table = [[0, 0, 0, 0], [0, 0, 0, 1], [0, 0, 1, 0], [0, 0, 1, 1], [0, 1, 0, 0]
 
 _GRAYSCALE_THRESHOLD = 0.5
 _IMAGE_SIZE = 28
-_DATA_SIZE = 200
+_DATA_SIZE = 1000
 
 torch.set_printoptions(threshold=100000)
 data_path = os.getcwd() + '/mnist'
