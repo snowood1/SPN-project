@@ -1,12 +1,12 @@
 from SumProductNets import *
 import numpy as np
-from sklearn.metrics import mutual_info_score
+from itertools import product
 
 
 k_mean_k = 2
 k_mean_its = 20
 
-dependent_threshold = 0.05
+dependent_threshold = 0.1
 
 
 def train(data, rvs):
@@ -32,9 +32,12 @@ def split_instances(data, rvs):
     for c in range(k):
         ch_data = data[:, clustering == c]
         _, ch_m = ch_data.shape
+        if ch_m == 0:
+            continue
         ch.append(split_variables(ch_data, rvs))
         w.append(ch_m / m)
 
+    print('sum')
     return SumNode(ch, np.array(w))
 
 
@@ -50,24 +53,43 @@ def split_variables(data, rvs):
             remaining_rvs_idx -= {x_idx}
             for y_idx in range(d):
                 if y_idx in remaining_rvs_idx:
-                    mi = mutual_info(data[x_idx], data[y_idx], rvs[x_idx], rvs[y_idx])
+                    # mi = mutual_info(data[x_idx], data[y_idx], rvs[x_idx], rvs[y_idx])
+                    mi = np.random.rand()
                     if mi > dependent_threshold:
                         remaining_rvs_idx -= {y_idx}
                         ch_rvs_idx.append(y_idx)
 
+            ch_data = data[ch_rvs_idx, :]
+            _, m = ch_data.shape
             if len(ch_rvs_idx) == 1 or (ch_data == ch_data[0]).all():
                 for i in ch_rvs_idx:
-                    ch.append(RVNode(rvs[i]))
+                    print('rv_node')
+                    ch.append(RVNode(rvs[i], np.array([sum(data[i] == j) / m for j in rvs[i].domain])))
             else:
-                ch_data = data[ch_rvs_idx, :]
                 ch.append(split_instances(ch_data, [rvs[i] for i in ch_rvs_idx]))
 
+    print('product')
     return ProductNode(ch)
 
 
 def mutual_info(x, y, rv_x, rv_y):
-    c_xy, _, _ = np.histogram2d(x, y, bins=(rv_x, rv_y))
-    res = mutual_info_score(None, None, contingency=c_xy)
-    return res
+    m = len(x)
+    a, a_p = dict(), dict()
+    b, b_p = dict(), dict()
 
+    for s in rv_x.domain:
+        a[s] = x == s
+        a_p[s] = sum(a[s]) / m
+    for s in rv_y.domain:
+        b[s] = y == s
+        b_p[s] = sum(b[s]) / m
+
+    res = 0
+    for s in product(rv_x.domain, rv_y.domain):
+        ab_p = sum(a[s[0]] * b[s[1]]) / m
+        if ab_p == 0:
+            continue
+        res += ab_p * np.log(ab_p / (a_p[s[0]] * b_p[s[1]]))
+
+    return res
 
