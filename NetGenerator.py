@@ -215,7 +215,7 @@ def main():
     test_rv = [RV(domain=[0, 1]) for _ in range(28*28)]
     test_rv_2 = [RV(domain=[0, 1]) for _ in range(28*28)]
     # Generic construction requires sum_replicate & cut_limit
-    test_gen = NetGenerator(28*28, 0, test_rv, sum_replicate=2, cut_limit=(5, 10))
+    test_gen = NetGenerator(28*28, 0, test_rv, sum_replicate=2, cut_limit=(5, 8))
     # Random construction requires sum_replicate & prod_replicate
     test_gen_2 = NetGenerator(28*28, 0, test_rv_2, prod_replicate=5, cut_limit=(1, 1))
 
