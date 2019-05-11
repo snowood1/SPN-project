@@ -1,3 +1,7 @@
+#author: Yibo Hu
+# A scratch implementation of the structure of SPN
+# Inference and gradient descent back propagation.
+
 import numpy as np
 
 class Node(object):
@@ -46,7 +50,7 @@ class SumNode(Node):
         self.weights.append(weight)
 
         #     for child
-        # Todo:  MPE Inference (MPE assignment)  MPE 没有写，只有sum 模式
+        # Todo:  MPE Inference (MPE assignment) 
 
     def eval(self, X, Q, mpe=None):  #  X = {x1:0, x2:0 , x3:1}
         weights = self.weights/np.sum(self.weights)
@@ -163,17 +167,17 @@ class SPN():
         Var=[]
 
         for k in range(2):
-            Var.append(Variables(k))   # 定义了两个binary variables  x0, x1
+            Var.append(Variables(k))   # define two binary variables  x0, x1
 
-        s1 = LeafNode('s1',Var[0],weights=[2,8])  # 叶子 s1 包含 x0
-        s2 = LeafNode('s2',Var[0] ,weights=[1,9])  # s2 包含 x0
-        s3 = LeafNode('s3',Var[1],weights=[4,6]) # s3 包含 x1
-        s4 = LeafNode('s4',Var[1],weights=[3,7]) # s4 包含 x1
+        s1 = LeafNode('s1',Var[0],weights=[2,8])  # leaf s1 consists of  x0
+        s2 = LeafNode('s2',Var[0] ,weights=[1,9])  # s2 consists of  x0
+        s3 = LeafNode('s3',Var[1],weights=[4,6]) # s3  consists of x1
+        s4 = LeafNode('s4',Var[1],weights=[3,7]) # s4  consists of x1
 
-        p1 = ProdNode('p1 = s1+s3', [s1, s3])  # 第二层是product node  
+        p1 = ProdNode('p1 = s1+s3', [s1, s3])  # The 2nd layer consists of product nodes  
         p2 = ProdNode('p2 = s2+s4', [s2, s4])
 
-        s0 = SumNode('root', [p1,p2],[0.3,0.7]) # 第三层是root sum node
+        s0 = SumNode('root', [p1,p2],[0.3,0.7]) # The 3rd layer consists of root sum node
 
         self.nodes=[s1,s2,s3,s4, p1,p2,s0]
         self.root= s0
@@ -207,11 +211,11 @@ class SPN():
 
 
 
-# 实现了简单的inference 过程
+# An easy inference process
 s=SPN()
 s.train()
 
-# X是training data  一共四行，每行两个feature x0 x1
+# X is training data  4 rows(4 data points), 2 columns(features x0 x1)
 #            x0 x1
 X=np.array([[0,0],     #P(x0=0, x1 = 0 )
             [0,1],     #P(x0=0, x1 = 1 )
@@ -219,23 +223,23 @@ X=np.array([[0,0],     #P(x0=0, x1 = 0 )
             [1,1]])    #P(x0=1, x1 = 1 )
 
 print('\nP(x0,x1):')
-print(s.inference(X,[1,1]))  # [1,1] means P(x0, x1) 意思是考虑x0,x1,联合概率
+print(s.inference(X,[1,1]))  # [1,1] means P(x0, x1) considers x0,x1,joint prob
 
 print('\nP(x0):')
-print(s.inference(X,[1,0]))  # [1,0] means P(x0) 意思是考虑x0, 不考虑 x1, marginal prob
+print(s.inference(X,[1,0]))  # [1,0] means P(x0) only considers x0, ignores x1, marginal prob
 
 print('\nP(x1):')
-print(s.inference(X,[0,1]))  # [0,1] means P(x1) 意思是考虑x1, 不考虑 x0, marginal prob
+print(s.inference(X,[0,1]))  # [0,1] means P(x1) only considers x1, ignores x0, marginal prob
 
-# P(x1| x0 )  第一个[0,1]表示查询P(x1), 第二个[1,0] 表示条件是P(x0)
+# P(x1| x0 )  [0,1] means P(x1),  [1,0] means P(x0)
 print('\nP(x1| x0 ):')
 print(s.inference(X,[0,1],[1,0]))
 
-# P(x0| x1 )  第一个[1,0] 表示查询P(x0), 第二个[0,1] 表示条件是P(x1)
+# P(x0| x1 )  [1,0] means P(x0),  [0,1] means P(x1)
 print('\nP(x0|x1):')
 print(s.inference(X,[1,0],[0,1]))
 
-# 现在我们看一下gradient decent的结果， 做gradient必须先inference了之后才能做gradient
+# The result of back propagation after one feed forward inference
 print('\nP(x0,x1) gradient decent:')
 s.inference(X,[1,1])
 s.gradient_descent()
